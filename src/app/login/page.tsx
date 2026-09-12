@@ -1,22 +1,44 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    setMessage("");
 
     if (!email || !password) {
       setMessage("Please enter your email and password.");
       return;
     }
 
-    setMessage("Login system will be connected to Supabase next.");
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // Login successful
+    router.push("/");
+    router.refresh();
   }
 
   return (
@@ -46,7 +68,8 @@ export default function LoginPage() {
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400"
+                disabled={loading}
+                className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400 disabled:opacity-60"
               />
 
               <div className="relative">
@@ -55,15 +78,15 @@ export default function LoginPage() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 pr-16 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400"
+                  disabled={loading}
+                  className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 pr-16 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400 disabled:opacity-60"
                 />
 
                 {password && (
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword(!showPassword)
-                    }
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-700"
                   >
                     {showPassword ? "Hide" : "Show"}
@@ -73,9 +96,10 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="mt-2 h-10 w-full rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700"
+                disabled={loading}
+                className="mt-2 h-10 w-full rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Log in
+                {loading ? "Logging in..." : "Log in"}
               </button>
 
               {message && (

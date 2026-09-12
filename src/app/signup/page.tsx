@@ -1,163 +1,172 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
-  const [name, setName] = useState("");
+  const router = useRouter();
+
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  async function handleSignup(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!name || !email || !password || !confirmPassword) {
-      setMessage("Please fill in all fields.");
+    setError("");
+    setSuccess("");
+
+    if (!fullName || !username || !email || !password) {
+      setError("Please fill in all fields.");
       return;
     }
 
     if (password.length < 6) {
-      setMessage("Password must be at least 6 characters.");
+      setError("Password must be at least 6 characters.");
       return;
     }
 
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          username: username,
+        },
+      },
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setError(error.message);
       return;
     }
 
-    setMessage("Signup system will be connected to Supabase next.");
+    if (data.user) {
+      setSuccess(
+        "Account created successfully! Check your email if confirmation is required."
+      );
+
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+    }
   }
 
   return (
-    <main className="min-h-screen bg-[#fafafa] px-5 text-gray-900">
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="w-full max-w-[350px]">
-
-          {/* Signup Card */}
-          <div className="border border-gray-300 bg-white px-10 py-8">
-
-            {/* Logo */}
-            <div className="mb-6 text-center">
-              <h1 className="text-4xl font-bold tracking-tight">
-                Nivaran
-              </h1>
-
-              <p className="mx-auto mt-3 max-w-[240px] text-sm leading-5 text-gray-500">
-                Join Nivaran and help turn real-world problems into solutions.
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-
-              {/* Name */}
-              <input
-                type="text"
-                placeholder="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400"
-              />
-
-              {/* Email */}
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400"
-              />
-
-              {/* Password */}
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 pr-16 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400"
-                />
-
-                {password && (
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-700"
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <input
-                type="password"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="h-11 w-full rounded-[3px] border border-gray-300 bg-[#fafafa] px-3 text-sm outline-none placeholder:text-gray-500 focus:border-gray-400"
-              />
-
-              {/* Terms */}
-              <div className="flex items-start gap-2 py-2">
-                <input
-                  id="terms"
-                  type="checkbox"
-                  required
-                  className="mt-0.5 h-4 w-4"
-                />
-
-                <label
-                  htmlFor="terms"
-                  className="text-xs leading-4 text-gray-500"
-                >
-                  I agree to Nivaran's terms and privacy policy.
-                </label>
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                className="h-10 w-full rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                Sign up
-              </button>
-
-              {message && (
-                <p className="pt-2 text-center text-xs text-red-500">
-                  {message}
-                </p>
-              )}
-            </form>
-
-            {/* Info */}
-            <p className="mt-5 text-center text-xs leading-4 text-gray-400">
-              By signing up, you can discover challenges,
-              collaborate with others and submit solutions.
-            </p>
+    <main className="flex min-h-screen items-center justify-center bg-[#faf8f3] px-4">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="mb-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#0f1c3f]">
+            <span className="text-xl font-extrabold text-white">N</span>
           </div>
 
-          {/* Login Card */}
-          <div className="mt-3 border border-gray-300 bg-white py-5 text-center">
-            <p className="text-sm text-gray-700">
-              Already have an account?{" "}
-              <a
-                href="/login"
-                className="font-semibold text-blue-600 hover:underline"
-              >
-                Log in
-              </a>
-            </p>
-          </div>
+          <h1 className="mt-4 text-2xl font-extrabold text-[#0f1c3f]">
+            Join Nivaran
+          </h1>
 
-          {/* Footer */}
-          <p className="mt-6 text-center text-xs text-gray-400">
-            © 2026 Nivaran
+          <p className="mt-2 text-sm text-slate-500">
+            Create an account and start solving problems.
           </p>
         </div>
+
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              Full name
+            </label>
+
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Your full name"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#0f1c3f]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              Username
+            </label>
+
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Choose a username"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#0f1c3f]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              Email
+            </label>
+
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#0f1c3f]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+              Password
+            </label>
+
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 6 characters"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#0f1c3f]"
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+              {success}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-[#0f1c3f] py-3 text-sm font-bold text-white transition hover:bg-[#1a2d5a] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Creating account..." : "Create account"}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Already have an account?{" "}
+          <a
+            href="/login"
+            className="font-bold text-[#0f1c3f] hover:underline"
+          >
+            Log in
+          </a>
+        </p>
       </div>
     </main>
   );
